@@ -19,12 +19,12 @@ import (
 const SYSTEM_UPDATE_INTERVAL = 120
 
 type EbusConnection struct {
-	logger               Logger
-	ebusdAddress         string
-	ebusdConn            net.Conn
-	ebusdReadBuffer      bufio.Reader
-	controllerForSFMode  string
-	lastGetSystemAt      time.Time
+	logger              Logger
+	ebusdAddress        string
+	ebusdConn           net.Conn
+	ebusdReadBuffer     bufio.Reader
+	controllerForSFMode string
+	//lastGetSystemAt      time.Time
 	systemUpdateInterval time.Duration
 }
 
@@ -243,7 +243,7 @@ func (c *EbusConnection) refreshEbusdConnection() error {
 func (c *EbusConnection) getSystem(relData *VaillantRelData, reset bool) error {
 	var err error
 	var findResult string
-	if !reset && time.Now().Before(c.lastGetSystemAt.Add(c.systemUpdateInterval)) {
+	if !reset && time.Now().Before(relData.LastGetSystem.Add(c.systemUpdateInterval)) {
 		// Use relData that are already present instead of reading current data from ebusd
 		return nil
 	}
@@ -378,7 +378,7 @@ func (c *EbusConnection) getSystem(relData *VaillantRelData, reset bool) error {
 	}
 
 	// Set timestamp lastGetSystemAt and return nil error
-	c.lastGetSystemAt = time.Now()
+	relData.LastGetSystem = time.Now()
 	return nil
 }
 
