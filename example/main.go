@@ -58,7 +58,7 @@ func printKeyBinding() {
 	fmt.Println("   8 = Stop zone quick veto")
 	fmt.Println("   9 = Stop strategy based quick mode")
 	fmt.Println("   0 = Read current power consumption")
-	fmt.Println("   s = Write system device info to file")
+	fmt.Println("   s = Write system info to file")
 	fmt.Println("   h = Show key bindings")
 	fmt.Println("   q = Quit")
 	fmt.Println("#############################################")
@@ -184,6 +184,7 @@ func main() {
 			}*/
 			case i == rune('4'):
 				fmt.Println("Starting hotwater boost")
+				logger.Println("Starting hotwater boost")
 				err = conn.StartHotWaterBoost()
 				if err != nil {
 					fmt.Println(" An error occurred. ", err)
@@ -191,6 +192,7 @@ func main() {
 				}
 			case i == rune('5'):
 				fmt.Println("Starting zone quick veto")
+				logger.Println("Starting zone quick veto")
 				err = conn.StartZoneQuickVeto(heatingPar.ZoneIndex, heatingPar.VetoSetpoint, heatingPar.VetoDuration)
 				if err != nil {
 					fmt.Println(" An error occurred. ", err)
@@ -198,6 +200,7 @@ func main() {
 				}
 			case i == rune('6'):
 				fmt.Println("Starting strategy based session")
+				logger.Println("Starting strategy based session")
 				result, err := conn.StartStrategybased(sensonetEbus.STRATEGY_HOTWATER_THEN_HEATING, &heatingPar)
 				if err != nil {
 					fmt.Println(" An error occurred. ", err)
@@ -207,6 +210,7 @@ func main() {
 				}
 			case i == rune('7'):
 				fmt.Println("Stopping hotwater boost")
+				logger.Println("Stopping hotwater boost")
 				err = conn.StopHotWaterBoost()
 				if err != nil {
 					fmt.Println(" An error occurred. ", err)
@@ -214,6 +218,7 @@ func main() {
 				}
 			case i == rune('8'):
 				fmt.Println("Stopping zone quick veto")
+				logger.Println("Stopping zone quick veto")
 				err = conn.StopZoneQuickVeto(heatingPar.ZoneIndex)
 				if err != nil {
 					fmt.Println(" An error occurred. ", err)
@@ -221,6 +226,7 @@ func main() {
 				}
 			case i == rune('9'):
 				fmt.Println("Stopping strategy based session")
+				logger.Println("Stopping strategy based session")
 				result, err := conn.StopStrategybased(&heatingPar)
 				if err != nil {
 					fmt.Println(" An error occurred. ", err)
@@ -230,6 +236,7 @@ func main() {
 				}
 			case i == rune('0'):
 				fmt.Println("Getting current power consumption")
+				logger.Println("Getting current power consumption")
 				result, err := conn.GetSystemCurrentPower()
 				if err != nil {
 					fmt.Println(" An error occurred. ", err)
@@ -238,6 +245,7 @@ func main() {
 				fmt.Println("Current power consumption of system=", result)
 			case i == rune('s'):
 				fmt.Println("Writing system info to file")
+				logger.Println("Writing system info to file")
 				result, err := conn.GetSystem(true)
 				if err != nil {
 					fmt.Println(" An error occurred. ", err)
@@ -259,6 +267,7 @@ func main() {
 		default:
 			// No key pressed. Print some information every 30 seconds
 			if time.Now().After(lastPrint.Add(30 * time.Second)) {
+				logger.Printf("It is %s. Calling Get system and print results.", time.Now().Format("15:04:05"))
 				state, err := conn.GetSystem(false) // 'false' means, that data from cache can be used
 				if err != nil {
 					logger.Fatal(err)
@@ -269,7 +278,7 @@ func main() {
 				fmt.Printf("   OutdoorTemperature: %.1f°C\n", state.Status.OutsideTemperature)
 				fmt.Print("   Zones: ")
 				for _, z := range state.Zones {
-					fmt.Printf("\"%s\":%.1f°C (Setpoint=%.1f°C), ", z.Name, z.RoomTemp, z.ActualRoomTempDesired)
+					fmt.Printf("\"%s\":%.1f°C (Setpoint=%.1f°C), ", z.Name1+z.Name2, z.RoomTemp, z.ActualRoomTempDesired)
 				}
 				fmt.Println("")
 				fmt.Printf("   HotWaterTemperature: %.1f°C (Setpoint=%.1f°C)\n", state.Hotwater.HwcStorageTemp, state.Hotwater.HwcTempDesired)

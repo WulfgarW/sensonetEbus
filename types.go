@@ -25,7 +25,9 @@ const (
 	EBUSDREAD_HOTWATER_TEMPDESIRED        = "HwcTempDesired"
 	EBUSDREAD_HOTWATER_STORAGETEMP        = "HwcStorageTemp"
 	EBUSDREAD_HOTWATER_SFMODE             = "HwcSFMode"
-	EBUSDREAD_ZONE_NAME                   = "Shortname"             //To be added by the zone prefix
+	EBUSDREAD_ZONE_SHORTNAME              = "Shortname"             //To be added by the zone prefix
+	EBUSDREAD_ZONE_NAME1                  = "Name1"                 //To be added by the zone prefix
+	EBUSDREAD_ZONE_NAME2                  = "Name2"                 //To be added by the zone prefix
 	EBUSDREAD_ZONE_ACTUALROOMTEMPDESIRED  = "ActualRoomTempDesired" //To be added by the zone prefix
 	EBUSDREAD_ZONE_OPMODE                 = "OpMode"                //To be added by the zone prefix
 	EBUSDREAD_ZONE_SFMODE                 = "SFMode"                //To be added by the zone prefix
@@ -47,6 +49,7 @@ const (
 	//eBusd errors
 	EBUSD_ERROR_ELEMENTNOTFOUND = "ERR: element not found"
 	EBUSD_ERROR_NOSIGNAL        = "ERR: no signal"
+	EBUSD_ERROR_INVALIDPOSITION = "ERR: invalid position in decode"
 	EBUSD_ERROR_DUMMY           = "ERR: dummy"
 )
 
@@ -60,7 +63,9 @@ const NUMBER_OF_ZONES_TO_READ = 3
 
 type VaillantRelDataZones struct {
 	Index                 int
-	Name                  string
+	Name1                 string
+	Name2                 string
+	ShortName             string
 	ActualRoomTempDesired float64
 	OpMode                string
 	SFMode                string

@@ -163,7 +163,7 @@ func (c *EbusConnection) ebusdRead(searchString string, notOlderThan int) (strin
 				return "", err
 			}
 		}
-		time.Sleep(100 * time.Millisecond) // give the ebusd a short time span before reading the answer
+		time.Sleep(200 * time.Millisecond) // give the ebusd a short time span before reading the answer
 		message, err = buf.ReadString('\n')
 		if err != nil && readTry > 1 {
 			c.debug(fmt.Sprintf("Error when reading from ebusd: %s", err))
@@ -171,7 +171,8 @@ func (c *EbusConnection) ebusdRead(searchString string, notOlderThan int) (strin
 		}
 		readTry = readTry + 1
 		if readTry < 3 && message[:min(4, len(message))] == "ERR:" {
-			c.debug(fmt.Sprintf("Read try no. %d, Command: %s, ebusd answered: %s", readTry, ebusCommand+searchString, message))
+			//c.debug(fmt.Sprintf("Read try no. %d, Command: %s, ebusd answered: %s", readTry, ebusCommand+searchString, message))
+
 			// When ebusd return an ERR: message, it returns an additional '\n'
 			_, err = buf.ReadString('\n')
 		}
@@ -179,6 +180,10 @@ func (c *EbusConnection) ebusdRead(searchString string, notOlderThan int) (strin
 	message = strings.TrimSpace(message)
 	if message[:min(4, len(message))] == "ERR:" {
 		c.debug(fmt.Sprintf("Command: %s, ebusd answered: %s", ebusCommand+searchString, message))
+		if message == EBUSD_ERROR_INVALIDPOSITION {
+			// If ebusd returns "ERR: invalid position in decode" the message is set to ""
+			message = ""
+		}
 		// When ebusd return an ERR: message, it returns an additional '\n'
 		_, err = buf.ReadString('\n')
 	}
@@ -457,12 +462,26 @@ func (c *EbusConnection) getZoneDataFromEbus(zoneData *VaillantRelDataZones, hea
 	} else {
 		zoneData.QuickVetoEndTime = findResult
 	}
-	findResult, err = c.ebusdRead(zonePrefix+EBUSDREAD_ZONE_NAME, -1)
+	findResult, err = c.ebusdRead(zonePrefix+EBUSDREAD_ZONE_SHORTNAME, -1)
 	if err != nil {
-		c.debug(fmt.Sprintf("Error when reading '%s' from ebusd: %s. Leaving getSystem()", EBUSDREAD_ZONE_NAME, err))
+		c.debug(fmt.Sprintf("Error when reading '%s' from ebusd: %s. Leaving getSystem()", EBUSDREAD_ZONE_SHORTNAME, err))
 		return err
 	} else {
-		zoneData.Name = findResult
+		zoneData.ShortName = findResult
+	}
+	findResult, err = c.ebusdRead(zonePrefix+EBUSDREAD_ZONE_NAME1, -1)
+	if err != nil {
+		c.debug(fmt.Sprintf("Error when reading '%s' from ebusd: %s. Leaving getSystem()", EBUSDREAD_ZONE_NAME1, err))
+		return err
+	} else {
+		zoneData.Name1 = findResult
+	}
+	findResult, err = c.ebusdRead(zonePrefix+EBUSDREAD_ZONE_NAME2, -1)
+	if err != nil {
+		c.debug(fmt.Sprintf("Error when reading '%s' from ebusd: %s. Leaving getSystem()", EBUSDREAD_ZONE_NAME2, err))
+		return err
+	} else {
+		zoneData.Name2 = findResult
 	}
 
 	return err
@@ -472,6 +491,7 @@ func (c *EbusConnection) getZoneDataFromEbus(zoneData *VaillantRelDataZones, hea
 func (c *EbusConnection) checkEbusdConfig() (string, error) {
 	var err error
 	var findResult, details string
+	c.debug("In checkEbusConfig()")
 	errElementNotFound := false
 	c.ebusdConn, err = net.Dial("tcp", c.ebusdAddress)
 	if err != nil {
@@ -509,7 +529,8 @@ func (c *EbusConnection) checkEbusdConfig() (string, error) {
 	for i := 0; i < NUMBER_OF_ZONES_TO_READ; i++ {
 		zonePrefix := fmt.Sprintf("z%01d", i+1)
 		for _, what := range []string{EBUSDREAD_ZONE_OPMODE, EBUSDREAD_ZONE_SFMODE, EBUSDREAD_ZONE_ACTUALROOMTEMPDESIRED, EBUSDREAD_ZONE_ROOMTEMP,
-			EBUSDREAD_ZONE_QUICKVETOTEMP, EBUSDREAD_ZONE_QUICKVETOENDTIME, EBUSDREAD_ZONE_QUICKVETOENDDATE, EBUSDREAD_ZONE_QUICKVETODURATION, EBUSDREAD_ZONE_NAME} {
+			EBUSDREAD_ZONE_QUICKVETOTEMP, EBUSDREAD_ZONE_QUICKVETOENDTIME, EBUSDREAD_ZONE_QUICKVETOENDDATE, EBUSDREAD_ZONE_QUICKVETODURATION,
+			EBUSDREAD_ZONE_NAME1, EBUSDREAD_ZONE_NAME2, EBUSDREAD_ZONE_SHORTNAME} {
 			findResult, err = c.ebusdRead(zonePrefix+what, -1)
 			if err != nil || findResult[:min(4, len(findResult))] == "ERR:" {
 				details += c.setDetailsAndDebugMessage(zonePrefix+what, findResult, err)
@@ -522,6 +543,7 @@ func (c *EbusConnection) checkEbusdConfig() (string, error) {
 	if errElementNotFound {
 		err = fmt.Errorf("Some ebus read commands got %q", EBUSD_ERROR_ELEMENTNOTFOUND)
 	}
+	c.debug("End of checkEbusConfig()")
 	return details, err
 }
 
@@ -540,9 +562,10 @@ func convertToFloat(rawResult string, min, max float64) (float64, error) {
 }
 
 func (c *EbusConnection) setDetailsAndDebugMessage(what, result string, err error) string {
-	c.debug(fmt.Sprintf("Value '%s' returnd from ebusd for %s. Error: %s", result, what, err))
 	if err != nil {
+		c.debug(fmt.Sprintf("Value '%s' returnd from ebusd for %s. Error: %s", result, what, err))
 		return fmt.Sprintf("Trying to read %s. Error: %s\n", what, err)
 	}
+	c.debug(fmt.Sprintf("Value '%s' returnd from ebusd for %s.", result, what))
 	return fmt.Sprintf("Trying to read %s. Result: %s\n", what, result)
 }
