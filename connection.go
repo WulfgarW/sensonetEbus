@@ -7,14 +7,12 @@ import (
 
 // Connection is the SensonetEbus connection
 type Connection struct {
-	logger             Logger
-	ebusdConn          *EbusConnection
-	currentQuickmode   string
-	quickmodeStarted   time.Time
-	quickmodeStopped   time.Time
-	quickVetoSetPoint  float32
-	quickVetoExpiresAt string
-	relData            VaillantRelData
+	logger           Logger
+	ebusdConn        *EbusConnection
+	currentQuickmode string
+	quickmodeStarted time.Time
+	quickmodeStopped time.Time
+	relData          VaillantRelData
 }
 
 // NewConnection creates a new Sensonet device connection.
@@ -44,14 +42,6 @@ func (c *Connection) debug(fmt string, arg ...any) {
 
 func (c *Connection) GetCurrentQuickMode() string {
 	return c.currentQuickmode
-}
-
-func (c *Connection) GetQuickVetoSetPoint() float32 {
-	return c.quickVetoSetPoint
-}
-
-func (c *Connection) GetQuickVetoExpiresAt() string {
-	return c.quickVetoExpiresAt
 }
 
 func (c *Connection) GetSystem(refresh bool) (VaillantRelData, error) {
@@ -90,8 +80,6 @@ func (c *Connection) StartZoneQuickVeto(zone int, setpoint float32, duration flo
 		c.debug(fmt.Sprintf("could not start zone quick veto. Error: %s", err))
 		return err
 	}
-	c.quickVetoSetPoint = setpoint
-	c.quickVetoExpiresAt = (time.Now().Add(time.Duration(int64(duration*60) * int64(time.Minute)))).Format("15:04")
 	c.relData.LastGetSystem = time.Time{} // reset the cache
 	return err
 }
@@ -108,8 +96,6 @@ func (c *Connection) StopZoneQuickVeto(zone int) error {
 		c.debug(fmt.Sprintf("could not stop zone quick veto. Error: %s", err))
 		return err
 	}
-	c.quickVetoSetPoint = 0
-	c.quickVetoExpiresAt = ""
 	c.relData.LastGetSystem = time.Time{} // reset the cache
 	return err
 }
