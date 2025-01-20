@@ -10,7 +10,7 @@ func WithLogger(logger Logger) ConnOption {
 
 type EbusConnOption func(*EbusConnection)
 
-func WithConnLogger(logger Logger) EbusConnOption {
+func withConnLogger(logger Logger) EbusConnOption {
 	return func(c *EbusConnection) {
 		c.logger = logger
 	}

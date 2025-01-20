@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"syscall"
 
-	//"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -19,17 +18,16 @@ import (
 const SYSTEM_UPDATE_INTERVAL = 120
 
 type EbusConnection struct {
-	logger              Logger
-	ebusdAddress        string
-	ebusdConn           net.Conn
-	ebusdReadBuffer     bufio.Reader
-	controllerForSFMode string
-	//lastGetSystemAt      time.Time
+	logger               Logger
+	ebusdAddress         string
+	ebusdConn            net.Conn
+	ebusdReadBuffer      bufio.Reader
+	controllerForSFMode  string
 	systemUpdateInterval time.Duration
 }
 
 // NewConnection creates a new Sensonet device connection.
-func NewEbusConnection(ebusdAddress string, opts ...EbusConnOption) (*EbusConnection, error) {
+func newEbusConnection(ebusdAddress string, opts ...EbusConnOption) (*EbusConnection, error) {
 	ebus := &EbusConnection{}
 	ebus.ebusdAddress = ebusdAddress
 	ebus.systemUpdateInterval = SYSTEM_UPDATE_INTERVAL * time.Second
@@ -224,14 +222,12 @@ func (c *EbusConnection) ebusdWrite(message string) error {
 	}
 	var ebusAnswer string
 	ebusAnswer, err = c.ebusdReadBuffer.ReadString('\n')
-	fmt.Println("Antwort auf write:", ebusAnswer)
 	if err != nil {
 		c.debug(fmt.Sprintf("Error when reading answer after ebusd write: %s", err))
 		return err
 	}
-	if strings.TrimSpace(ebusAnswer) != "done" {
-		c.debug(fmt.Sprintf("Command: %s, ebusd answered: %s", "write "+message, ebusAnswer))
-	}
+	c.debug(fmt.Sprintf("Command sent to ebusd: %s", "write "+message))
+	c.debug(fmt.Sprintf("ebusd answered: %s", ebusAnswer))
 	return err
 }
 
@@ -360,7 +356,6 @@ func (c *EbusConnection) getSystem(relData *VaillantRelData, reset bool) error {
 		return err
 	} else {
 		relData.Status.Status01 = findResult
-		// c.debug(fmt.Sprintf("Info: Value '%s' returned from ebusd for %s", findResult, EBUSDREAD_STATUS_STATUS01))
 	}
 	findResult, err = c.ebusdRead(EBUSDREAD_STATUS_STATE, -1)
 	if err != nil {
@@ -368,7 +363,6 @@ func (c *EbusConnection) getSystem(relData *VaillantRelData, reset bool) error {
 		return err
 	} else {
 		relData.Status.State = findResult
-		// c.debug(fmt.Sprintf("Info: Value '%s' returned from ebusd for %s", findResult, EBUSDREAD_STATUS_STATE))
 	}
 
 	// Getting Zone Data
@@ -377,9 +371,6 @@ func (c *EbusConnection) getSystem(relData *VaillantRelData, reset bool) error {
 	}
 	for i := 0; i < NUMBER_OF_ZONES_TO_READ && err == nil; i++ {
 		err = c.getZoneDataFromEbus(&relData.Zones[i], i+1)
-		/*if relData.Zones[i].SFMode == "veto" && i+1 == c.heatingZone {
-			c.quickVetoExpiresAt = relData.Zones[i].QuickVetoEndTime
-		}*/
 	}
 
 	// Set timestamp lastGetSystemAt and return nil error
@@ -506,7 +497,7 @@ func (c *EbusConnection) checkEbusdConfig() (string, error) {
 	for _, what := range []string{EBUSDREAD_HOTWATER_OPMODE, EBUSDREAD_HOTWATER_TEMPDESIRED, EBUSDREAD_HOTWATER_STORAGETEMP, EBUSDREAD_HOTWATER_SFMODE} {
 		findResult, err = c.ebusdRead(what, -1)
 		if err != nil {
-			details += c.setDetailsAndDebugMessage(what, findResult, err)
+			details += c.setDetailsAndWriteDebugMessage(what, findResult, err)
 		}
 		if findResult == EBUSD_ERROR_ELEMENTNOTFOUND {
 			errElementNotFound = true
@@ -518,7 +509,7 @@ func (c *EbusConnection) checkEbusdConfig() (string, error) {
 		EBUSDREAD_STATUS_CURRENTCONSUMEDPOWER, EBUSDREAD_STATUS_STATUS01, EBUSDREAD_STATUS_STATE} {
 		findResult, err = c.ebusdRead(what, -1)
 		if err != nil {
-			details += c.setDetailsAndDebugMessage(what, findResult, err)
+			details += c.setDetailsAndWriteDebugMessage(what, findResult, err)
 		}
 		if findResult == EBUSD_ERROR_ELEMENTNOTFOUND {
 			errElementNotFound = true
@@ -533,7 +524,7 @@ func (c *EbusConnection) checkEbusdConfig() (string, error) {
 			EBUSDREAD_ZONE_NAME1, EBUSDREAD_ZONE_NAME2, EBUSDREAD_ZONE_SHORTNAME} {
 			findResult, err = c.ebusdRead(zonePrefix+what, -1)
 			if err != nil || findResult[:min(4, len(findResult))] == "ERR:" {
-				details += c.setDetailsAndDebugMessage(zonePrefix+what, findResult, err)
+				details += c.setDetailsAndWriteDebugMessage(zonePrefix+what, findResult, err)
 			}
 			if findResult == EBUSD_ERROR_ELEMENTNOTFOUND {
 				errElementNotFound = true
@@ -561,7 +552,7 @@ func convertToFloat(rawResult string, min, max float64) (float64, error) {
 	}
 }
 
-func (c *EbusConnection) setDetailsAndDebugMessage(what, result string, err error) string {
+func (c *EbusConnection) setDetailsAndWriteDebugMessage(what, result string, err error) string {
 	if err != nil {
 		c.debug(fmt.Sprintf("Value '%s' returnd from ebusd for %s. Error: %s", result, what, err))
 		return fmt.Sprintf("Trying to read %s. Error: %s\n", what, err)

@@ -27,9 +27,9 @@ func NewConnection(ebusdAddress string, opts ...ConnOption) (*Connection, error)
 
 	var err error
 	if conn.logger != nil {
-		conn.ebusdConn, err = NewEbusConnection(ebusdAddress, WithConnLogger(conn.logger))
+		conn.ebusdConn, err = newEbusConnection(ebusdAddress, withConnLogger(conn.logger))
 	} else {
-		conn.ebusdConn, err = NewEbusConnection(ebusdAddress)
+		conn.ebusdConn, err = newEbusConnection(ebusdAddress)
 	}
 	return conn, err
 }
@@ -151,9 +151,10 @@ func (c *Connection) StartStrategybased(strategy int, heatingPar *HeatingParStru
 		err = fmt.Errorf("could not read current status information in StartStrategybased(): %s", err)
 		return "", err
 	}
+	c.refreshCurrentQuickMode()
+
 	// Extracting correct Zones element
 	zoneData := GetZoneData(c.relData.Zones, heatingPar.ZoneIndex)
-
 	if c.currentQuickmode != "" {
 		c.debug(fmt.Sprint("System is already in quick mode:", c.currentQuickmode))
 		c.debug("Is there any need to change that?")
@@ -161,7 +162,6 @@ func (c *Connection) StartStrategybased(strategy int, heatingPar *HeatingParStru
 		c.debug(fmt.Sprint("Special Function of Heating Zone: ", zoneData.SFMode))
 		return QUICKMODE_ERROR_ALREADYON, err
 	}
-
 	whichQuickMode := c.WhichQuickMode(strategy, heatingPar.ZoneIndex)
 	c.debug(fmt.Sprint("whichQuickMode=", whichQuickMode))
 
@@ -210,12 +210,12 @@ func (c *Connection) StopStrategybased(heatingPar *HeatingParStruct) (string, er
 		err = fmt.Errorf("could not read current status information in StopStrategybased(): %s", err)
 		return "", err
 	}
+	c.refreshCurrentQuickMode()
+
 	// Extracting correct Zones element
 	zoneData := GetZoneData(c.relData.Zones, heatingPar.ZoneIndex)
-
 	c.debug(fmt.Sprint("Operationg Mode of Dhw: ", c.relData.Hotwater.HwcSFMode))
 	c.debug(fmt.Sprint("Operationg Mode of Heating: ", zoneData.SFMode))
-
 	switch c.currentQuickmode {
 	case QUICKMODE_HOTWATER:
 		err = c.StopHotWaterBoost()
