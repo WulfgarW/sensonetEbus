@@ -7,12 +7,13 @@ import (
 
 // Connection is the SensonetEbus connection
 type Connection struct {
-	logger           Logger
-	ebusdConn        *EbusConnection
-	currentQuickmode string
-	quickmodeStarted time.Time
-	quickmodeStopped time.Time
-	relData          VaillantRelData
+	logger             Logger
+	ebusdConn          *EbusConnection
+	currentQuickmode   string
+	quickmodeStarted   time.Time
+	quickmodeStopped   time.Time
+	quickModeExpiresAt string
+	relData            VaillantRelData
 }
 
 // NewConnection creates a new Sensonet device connection.
@@ -20,6 +21,7 @@ func NewConnection(ebusdAddress string, opts ...ConnOption) (*Connection, error)
 	conn := &Connection{}
 	conn.currentQuickmode = ""
 	conn.quickmodeStarted = time.Now()
+	conn.quickModeExpiresAt = ""
 
 	for _, opt := range opts {
 		opt(conn)
@@ -42,6 +44,10 @@ func (c *Connection) debug(fmt string, arg ...any) {
 
 func (c *Connection) GetCurrentQuickMode() string {
 	return c.currentQuickmode
+}
+
+func (c *Connection) GetQuickModeExpiresAt() string {
+	return c.quickModeExpiresAt
 }
 
 func (c *Connection) GetSystem(refresh bool) (VaillantRelData, error) {
@@ -176,6 +182,7 @@ func (c *Connection) StartStrategybased(strategy int, heatingPar *HeatingParStru
 			c.currentQuickmode = QUICKMODE_HOTWATER
 			c.quickmodeStarted = time.Now()
 			c.debug("Starting hotwater boost")
+			c.quickModeExpiresAt = ""
 		}
 	case 2:
 		err = c.StartZoneQuickVeto(heatingPar.ZoneIndex, heatingPar.VetoSetpoint, heatingPar.VetoDuration)
@@ -183,6 +190,11 @@ func (c *Connection) StartStrategybased(strategy int, heatingPar *HeatingParStru
 			c.currentQuickmode = QUICKMODE_HEATING
 			c.quickmodeStarted = time.Now()
 			c.debug("Starting zone quick veto")
+			if heatingPar.VetoDuration < 0.0 {
+				c.quickModeExpiresAt = (time.Now().Add(time.Duration(int64(ZONEVETODURATION_DEFAULT*60) * int64(time.Minute)))).Format("15:04")
+			} else {
+				c.quickModeExpiresAt = (time.Now().Add(time.Duration(int64(heatingPar.VetoDuration*60) * int64(time.Minute)))).Format("15:04")
+			}
 		}
 	default:
 		if c.currentQuickmode == QUICKMODE_HOTWATER {
@@ -201,6 +213,7 @@ func (c *Connection) StartStrategybased(strategy int, heatingPar *HeatingParStru
 		}
 		c.currentQuickmode = QUICKMODE_NOTHING
 		c.quickmodeStarted = time.Now()
+		c.quickModeExpiresAt = (time.Now().Add(time.Duration(10 * time.Minute))).Format("15:04")
 		c.debug("Enable called but no quick mode possible. Starting idle mode")
 	}
 
@@ -237,6 +250,7 @@ func (c *Connection) StopStrategybased(heatingPar *HeatingParStruct) (string, er
 		c.debug("Nothing to do, no quick mode active")
 	}
 	c.currentQuickmode = ""
+	c.quickModeExpiresAt = ""
 	c.quickmodeStopped = time.Now()
 
 	c.relData.LastGetSystem = time.Time{} // reset the cache

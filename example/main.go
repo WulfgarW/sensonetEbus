@@ -283,7 +283,11 @@ func main() {
 				fmt.Println("")
 				fmt.Printf("   HotWaterTemperature: %.1f°C (Setpoint=%.1f°C)\n", state.Hotwater.HwcStorageTemp, state.Hotwater.HwcTempDesired)
 				zoneData := sensonetEbus.GetZoneData(state.Zones, heatingPar.ZoneIndex)
-				fmt.Printf("   Quickmodes: internal: \"%s\"  heat pump: Dhw: \"%s\"  Zone: \"%s\"\n", conn.GetCurrentQuickMode(), state.Hotwater.HwcSFMode, zoneData.SFMode)
+				quickModeExpiresAt := conn.GetQuickModeExpiresAt()
+				if quickModeExpiresAt == "" {
+					quickModeExpiresAt = "(unknown)"
+				}
+				fmt.Printf("   Quickmodes: internal: \"%s\" until %s. Heat pump: Dhw: \"%s\"  Zone: \"%s\"\n", conn.GetCurrentQuickMode(), quickModeExpiresAt, state.Hotwater.HwcSFMode, zoneData.SFMode)
 				fmt.Println("---------------------------------------------------------------------------------------------------------------------")
 				lastPrint = time.Now()
 
