@@ -133,9 +133,13 @@ func (c *Connection) refreshCurrentQuickMode() {
 	}
 	if newQuickMode != c.currentQuickmode {
 		if newQuickMode == "" {
-			c.debug(fmt.Sprintf("Old quickmode: \"%s\"   New quickmode: \"%s\"", c.currentQuickmode, newQuickMode))
-			c.currentQuickmode = newQuickMode
-			c.quickmodeStopped = time.Now()
+			if c.currentQuickmode == QUICKMODE_NOTHING && time.Now().Before(c.quickmodeStarted.Add(10*time.Minute)) {
+				c.debug("Idle mode active for less then 10 minutes. Keeping the idle mode")
+			} else {
+				c.debug(fmt.Sprintf("Old quickmode: \"%s\"   New quickmode: \"%s\"", c.currentQuickmode, newQuickMode))
+				c.currentQuickmode = newQuickMode
+				c.quickmodeStopped = time.Now()
+			}
 		}
 		if newQuickMode != "" {
 			c.debug(fmt.Sprintf("Old quickmode: \"%s\"   New quickmode: \"%s\"", c.currentQuickmode, newQuickMode))
