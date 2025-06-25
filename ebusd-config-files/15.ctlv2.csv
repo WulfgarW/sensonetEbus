@@ -193,7 +193,7 @@ r;w,,z2Name1,Bezeichnung Zone 2 Teil 1,,,,1700,,,zname,,,name of zone 2
 r;w,,z2Name2,Bezeichnung Zone 2 Teil 2,,,,1800,,,zname,,,name of zone 2
 r,,z2QuickVetoEndTime,Endzeit QuickVeto Zone 2,,,,1E00,,,HTI,,,end time of quick veto for zone 2
 r;w,,z2DayTemp,Solltemperatur Zone 2,,,,2200,,,tempv,,,day setpoint for zone 2
-r,,z2QuickVetoVEndDate,Enddatum QuickVeto Zone 2,,,,2400,,,HDA:3,,,end date of quick veto for zone 2
+r,,z2QuickVetoEndDate,Enddatum QuickVeto Zone 2,,,,2400,,,HDA:3,,,end date of quick veto for zone 2
 r;w,,z2QuickVetoDuration,Dauer QuickVeto Zone 2,,,,2600,,,EXP,,,duration of quick veto for zone 2
 # ##### Zone 3 #####,,,,,,,,,,,,,
 *r,,,,,,B524,02000302,,,IGN:4,,,
