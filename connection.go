@@ -342,5 +342,6 @@ func (c *Connection) GetSystemCurrentPower() (float64, error) {
 	if err != nil {
 		return -1.0, err
 	}
-	return state.Status.CurrentConsumedPower, err
+	c.debug(fmt.Sprintf("CurrentConsumedPower= %f  ImmersionHeaterPower= %f", state.Status.CurrentConsumedPower, state.Status.ImmersionHeaterPower))
+	return state.Status.CurrentConsumedPower + state.Status.ImmersionHeaterPower, err
 }

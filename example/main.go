@@ -112,7 +112,7 @@ func main() {
 		logger.Fatalln("readPars() ended unsuccessful. Probably no parameter file was found. Error:", err)
 	}
 
-	fmt.Println("Second step: Generating new connection to be used for further calls of sensonet library")
+	fmt.Println("Second step: Generating new connection to be used for further calls of sensonetEbus library")
 
 	// NewConnection() opens the connection to the myVaillant portal and returns a connection object for further function calls.
 	// You can provide an http client (especially one with logging) as optional parameter.

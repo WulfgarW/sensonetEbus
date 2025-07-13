@@ -340,7 +340,7 @@ func (c *EbusConnection) getSystem(relData *VaillantRelData, reset bool) error {
 	}
 	findResult, err = c.ebusdRead(EBUSDREAD_STATUS_CURRENTCONSUMEDPOWER, 60)
 	if err != nil {
-		c.debug(fmt.Sprintf("Error when reading '%s' from ebusd: %s. Leaving getSystem()", EBUSDREAD_STATUS_WATERPRESSURE, err))
+		c.debug(fmt.Sprintf("Error when reading '%s' from ebusd: %s. Leaving getSystem()", EBUSDREAD_STATUS_CURRENTCONSUMEDPOWER, err))
 		return err
 	} else {
 		convertedValue, err := convertToFloat(findResult, 0.0, 30.0)
@@ -348,6 +348,18 @@ func (c *EbusConnection) getSystem(relData *VaillantRelData, reset bool) error {
 			c.debug(fmt.Sprintf("Value '%s' returned from ebusd for %s invalid and therefore ignored. Error: %s", findResult, EBUSDREAD_STATUS_CURRENTCONSUMEDPOWER, err))
 		} else {
 			relData.Status.CurrentConsumedPower = convertedValue
+		}
+	}
+	findResult, err = c.ebusdRead(EBUSDREAD_STATUS_IMMERSIONHEATERPOWER, 60)
+	if err != nil {
+		c.debug(fmt.Sprintf("Error when reading '%s' from ebusd: %s. Leaving getSystem()", EBUSDREAD_STATUS_IMMERSIONHEATERPOWER, err))
+		return err
+	} else {
+		convertedValue, err := convertToFloat(findResult, 0.0, 30.0)
+		if err != nil {
+			c.debug(fmt.Sprintf("Value '%s' returned from ebusd for %s invalid and therefore ignored. Error: %s", findResult, EBUSDREAD_STATUS_IMMERSIONHEATERPOWER, err))
+		} else {
+			relData.Status.ImmersionHeaterPower = convertedValue
 		}
 	}
 	findResult, err = c.ebusdRead(EBUSDREAD_STATUS_STATUS01, -1)
@@ -506,7 +518,7 @@ func (c *EbusConnection) checkEbusdConfig() (string, error) {
 
 	// Getting General Status Data
 	for _, what := range []string{EBUSDREAD_STATUS_TIME, EBUSDREAD_STATUS_OUTSIDETEMPERATURE, EBUSDREAD_STATUS_SYSTEMFLOWTEMPERATUE, EBUSDREAD_STATUS_WATERPRESSURE,
-		EBUSDREAD_STATUS_CURRENTCONSUMEDPOWER, EBUSDREAD_STATUS_STATUS01, EBUSDREAD_STATUS_STATE} {
+		EBUSDREAD_STATUS_CURRENTCONSUMEDPOWER, EBUSDREAD_STATUS_IMMERSIONHEATERPOWER, EBUSDREAD_STATUS_STATUS01, EBUSDREAD_STATUS_STATE} {
 		findResult, err = c.ebusdRead(what, -1)
 		if err != nil {
 			details += c.setDetailsAndWriteDebugMessage(what, findResult, err)

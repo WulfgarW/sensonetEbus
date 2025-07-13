@@ -19,6 +19,7 @@ const (
 	EBUSDREAD_STATUS_SYSTEMFLOWTEMPERATUE = "SystemFlowTemp"
 	EBUSDREAD_STATUS_WATERPRESSURE        = "WaterPressure"
 	EBUSDREAD_STATUS_CURRENTCONSUMEDPOWER = "CurrentConsumedPower"
+	EBUSDREAD_STATUS_IMMERSIONHEATERPOWER = "ImmersionHeaterPower"
 	EBUSDREAD_STATUS_STATUS01             = "Status01"
 	EBUSDREAD_STATUS_STATE                = "State"
 	EBUSDREAD_HOTWATER_OPMODE             = "HwcOpMode"
@@ -101,6 +102,7 @@ type VaillantRelData struct {
 		WaterPressure         float64
 		//ControllerForSFMode   string
 		CurrentConsumedPower float64
+		ImmersionHeaterPower float64
 		Status01             string
 		State                string
 	}
