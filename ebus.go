@@ -184,7 +184,7 @@ func (c *EbusConnection) ebusdRead(searchString string, notOlderThan int) (strin
 		}
 		if message == EBUSD_ERROR_ELEMENTNOTFOUND && (searchString == EBUSDREAD_STATUS_CURRENTCONSUMEDPOWER || searchString == EBUSDREAD_STATUS_IMMERSIONHEATERPOWER) {
 			// If ebusd returns "ERR: element not found" for a power element, the message is set to ""
-			message = "power element not found"
+			message = EBUSD_ERROR_POWERELEMENTNOTFOUND
 		}
 		// When ebusd return an ERR: message, it returns an additional '\n'
 		_, err = buf.ReadString('\n')
@@ -347,6 +347,10 @@ func (c *EbusConnection) getSystem(relData *VaillantRelData, reset bool) error {
 		c.debug(fmt.Sprintf("Error when reading '%s' from ebusd: %s. Leaving getSystem()", EBUSDREAD_STATUS_CURRENTCONSUMEDPOWER, err))
 		return err
 	} else {
+		if findResult == EBUSD_ERROR_POWERELEMENTNOTFOUND {
+			findResult = "0.0"
+			c.debug(fmt.Sprintf("Ebusd element %s not found. Value therefore set to '%s'", EBUSDREAD_STATUS_IMMERSIONHEATERPOWER, findResult))
+		}
 		convertedValue, err := convertToFloat(findResult, 0.0, 30.0)
 		if err != nil {
 			c.debug(fmt.Sprintf("Value '%s' returned from ebusd for %s invalid and therefore ignored. Error: %s", findResult, EBUSDREAD_STATUS_CURRENTCONSUMEDPOWER, err))
@@ -359,6 +363,10 @@ func (c *EbusConnection) getSystem(relData *VaillantRelData, reset bool) error {
 		c.debug(fmt.Sprintf("Error when reading '%s' from ebusd: %s. Leaving getSystem()", EBUSDREAD_STATUS_IMMERSIONHEATERPOWER, err))
 		return err
 	} else {
+		if findResult == EBUSD_ERROR_POWERELEMENTNOTFOUND {
+			findResult = "0.0"
+			c.debug(fmt.Sprintf("Ebusd element %s not found. Value therefore set to '%s'", EBUSDREAD_STATUS_IMMERSIONHEATERPOWER, findResult))
+		}
 		convertedValue, err := convertToFloat(findResult, 0.0, 30.0)
 		if err != nil {
 			c.debug(fmt.Sprintf("Value '%s' returned from ebusd for %s invalid and therefore ignored. Error: %s", findResult, EBUSDREAD_STATUS_IMMERSIONHEATERPOWER, err))

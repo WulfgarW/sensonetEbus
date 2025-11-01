@@ -52,7 +52,7 @@ const (
 	EBUSD_ERROR_NOSIGNAL             = "ERR: no signal"
 	EBUSD_ERROR_INVALIDPOSITION      = "ERR: invalid position in decode"
 	EBUSD_ERROR_DUMMY                = "ERR: dummy"
-	EBUSD_ERROR_POWERELEMENTNOTFOUND = "power element not found" // This is not a ebusd error message but one of sensonetEbus
+	EBUSD_ERROR_POWERELEMENTNOTFOUND = "ERR: power element not found" // This is not a ebusd error message but one of sensonetEbus
 )
 
 type ParsStruct struct {
