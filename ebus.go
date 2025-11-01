@@ -179,8 +179,12 @@ func (c *EbusConnection) ebusdRead(searchString string, notOlderThan int) (strin
 	if message[:min(4, len(message))] == "ERR:" {
 		c.debug(fmt.Sprintf("Command: %s, ebusd answered: %s", ebusCommand+searchString, message))
 		if message == EBUSD_ERROR_INVALIDPOSITION {
-			// If ebusd returns "ERR: invalid position in decode" the message is set to ""
+			// If ebusd returns "ERR: invalid position in decode", the message is set to ""
 			message = ""
+		}
+		if message == EBUSD_ERROR_ELEMENTNOTFOUND && (searchString == EBUSDREAD_STATUS_CURRENTCONSUMEDPOWER || searchString == EBUSDREAD_STATUS_IMMERSIONHEATERPOWER) {
+			// If ebusd returns "ERR: element not found" for a power element, the message is set to ""
+			message = "power element not found"
 		}
 		// When ebusd return an ERR: message, it returns an additional '\n'
 		_, err = buf.ReadString('\n')
@@ -535,7 +539,7 @@ func (c *EbusConnection) checkEbusdConfig() (string, error) {
 		if err != nil {
 			details += c.setDetailsAndWriteDebugMessage(what, findResult, err)
 		}
-		if findResult == EBUSD_ERROR_ELEMENTNOTFOUND {
+		if findResult == EBUSD_ERROR_ELEMENTNOTFOUND || findResult == EBUSD_ERROR_POWERELEMENTNOTFOUND {
 			errPowerConsumptionElementNotFound = errPowerConsumptionElementNotFound + "Ebus element" + what + "got " + EBUSD_ERROR_ELEMENTNOTFOUND + ", "
 		}
 	}

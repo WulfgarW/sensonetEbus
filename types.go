@@ -48,10 +48,11 @@ const (
 	ZONEVETODURATION_DEFAULT = 0.5
 
 	//eBusd errors
-	EBUSD_ERROR_ELEMENTNOTFOUND = "ERR: element not found"
-	EBUSD_ERROR_NOSIGNAL        = "ERR: no signal"
-	EBUSD_ERROR_INVALIDPOSITION = "ERR: invalid position in decode"
-	EBUSD_ERROR_DUMMY           = "ERR: dummy"
+	EBUSD_ERROR_ELEMENTNOTFOUND      = "ERR: element not found"
+	EBUSD_ERROR_NOSIGNAL             = "ERR: no signal"
+	EBUSD_ERROR_INVALIDPOSITION      = "ERR: invalid position in decode"
+	EBUSD_ERROR_DUMMY                = "ERR: dummy"
+	EBUSD_ERROR_POWERELEMENTNOTFOUND = "power element not found" // This is not a ebusd error message but one of sensonetEbus
 )
 
 type ParsStruct struct {
