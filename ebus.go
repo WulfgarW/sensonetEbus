@@ -496,6 +496,7 @@ func (c *EbusConnection) checkEbusdConfig() (string, error) {
 	var findResult, details string
 	c.debug("In checkEbusConfig()")
 	errElementNotFound := false
+	errPowerConsumptionElementNotFound := ""
 	c.ebusdConn, err = net.Dial("tcp", c.ebusdAddress)
 	if err != nil {
 		details = details + fmt.Sprintf("Error in net.Dial(). Error: %s\n", err)
@@ -518,13 +519,24 @@ func (c *EbusConnection) checkEbusdConfig() (string, error) {
 
 	// Getting General Status Data
 	for _, what := range []string{EBUSDREAD_STATUS_TIME, EBUSDREAD_STATUS_OUTSIDETEMPERATURE, EBUSDREAD_STATUS_SYSTEMFLOWTEMPERATUE, EBUSDREAD_STATUS_WATERPRESSURE,
-		EBUSDREAD_STATUS_CURRENTCONSUMEDPOWER, EBUSDREAD_STATUS_IMMERSIONHEATERPOWER, EBUSDREAD_STATUS_STATUS01, EBUSDREAD_STATUS_STATE} {
+		EBUSDREAD_STATUS_STATUS01, EBUSDREAD_STATUS_STATE} {
 		findResult, err = c.ebusdRead(what, -1)
 		if err != nil {
 			details += c.setDetailsAndWriteDebugMessage(what, findResult, err)
 		}
 		if findResult == EBUSD_ERROR_ELEMENTNOTFOUND {
 			errElementNotFound = true
+		}
+	}
+
+	// Getting Power Consumption Data
+	for _, what := range []string{EBUSDREAD_STATUS_CURRENTCONSUMEDPOWER, EBUSDREAD_STATUS_IMMERSIONHEATERPOWER} {
+		findResult, err = c.ebusdRead(what, -1)
+		if err != nil {
+			details += c.setDetailsAndWriteDebugMessage(what, findResult, err)
+		}
+		if findResult == EBUSD_ERROR_ELEMENTNOTFOUND {
+			errPowerConsumptionElementNotFound = errPowerConsumptionElementNotFound + "Ebus element" + what + "got " + EBUSD_ERROR_ELEMENTNOTFOUND + ", "
 		}
 	}
 
@@ -542,6 +554,9 @@ func (c *EbusConnection) checkEbusdConfig() (string, error) {
 				errElementNotFound = true
 			}
 		}
+	}
+	if errPowerConsumptionElementNotFound != "" {
+		err = fmt.Errorf("%q", errPowerConsumptionElementNotFound)
 	}
 	if errElementNotFound {
 		err = fmt.Errorf("Some ebus read commands got %q", EBUSD_ERROR_ELEMENTNOTFOUND)
